@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 using NAudio.Wave;
 
-namespace AudioCenter
+namespace LostAudioPlayer
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -23,6 +23,7 @@ namespace AudioCenter
     public partial class MainWindow : Window
     {
         private bool IsPlaying = false;
+        private float Volume = 0.01f;
         WaveStream audioStream;
         IWavePlayer outputDevice;
 
@@ -33,8 +34,8 @@ namespace AudioCenter
 
         public void play()
         {
-            outputDevice.Volume = 0.009f;
-
+            outputDevice.Volume = Volume;
+            Console.WriteLine((float)Volume);
 
             if (IsPlaying)
             {
@@ -63,6 +64,7 @@ namespace AudioCenter
             play();
         }
 
+        /* 設定のロードとセーブ関連 */
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // 再生するファイル名
@@ -79,6 +81,25 @@ namespace AudioCenter
 
             // 音楽ストリームの入力
             outputDevice.Init(audioStream);
+
+            Volume = Properties.Settings.Default.volume_setting;
+
+            VolumeSlider.Value = Volume * 100;
+        }
+
+        private void MainForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.volume_setting = Volume;
+            Properties.Settings.Default.Save();
+        }
+
+        /* ボタンとスライダー関連 */
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            Volume = (float) (e.NewValue * 0.01);
+            outputDevice.Volume = Volume;
+
+            Console.WriteLine("Volume Change: "+Volume.ToString());
         }
     }
 }
