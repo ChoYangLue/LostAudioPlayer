@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -26,6 +27,8 @@ namespace LostAudioPlayer
         private float Volume = 0.01f;
         WaveStream audioStream;
         IWavePlayer outputDevice;
+        private bool SeekTaskFlag = true;
+        Task ts;
 
         public MainWindow()
         {
@@ -35,7 +38,6 @@ namespace LostAudioPlayer
         public void play()
         {
             outputDevice.Volume = Volume;
-            Console.WriteLine((float)Volume);
 
             if (IsPlaying)
             {
@@ -45,6 +47,19 @@ namespace LostAudioPlayer
             else
             {
                 outputDevice.Pause();
+            }
+        }
+
+        public void SeekMethod()
+        {
+            while (SeekTaskFlag)
+            {
+                double currentSec1 = audioStream.CurrentTime.TotalSeconds;
+                this.Dispatcher.Invoke(new Action(() =>
+                {
+                    SeekSlider.Value = (currentSec1/ audioStream.TotalTime.TotalSeconds)*SeekSlider.Maximum;
+                }));
+                Thread.Sleep(500);
             }
         }
 
@@ -68,7 +83,7 @@ namespace LostAudioPlayer
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // 再生するファイル名
-            string fileName = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\01-ANIMA.flac";
+            string fileName = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\ソードアート・オンライン_アリシゼーション_OP2.wav";
 
             // ファイル名の拡張子によって、異なるストリームを生成
             audioStream = new AudioFileReader(fileName);
@@ -82,6 +97,10 @@ namespace LostAudioPlayer
             // 音楽ストリームの入力
             outputDevice.Init(audioStream);
 
+            ts = Task.Run(() => {
+                SeekMethod();
+            });
+
             Volume = Properties.Settings.Default.volume_setting;
 
             VolumeSlider.Value = Volume * 100;
@@ -89,6 +108,8 @@ namespace LostAudioPlayer
 
         private void MainForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            SeekTaskFlag = false;
+
             Properties.Settings.Default.volume_setting = Volume;
             Properties.Settings.Default.Save();
         }
@@ -96,7 +117,7 @@ namespace LostAudioPlayer
         /* ボタンとスライダー関連 */
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            Volume = (float) (e.NewValue * 0.01);
+            Volume = (float) (e.NewValue /100 );
             outputDevice.Volume = Volume;
 
             Console.WriteLine("Volume Change: "+Volume.ToString());

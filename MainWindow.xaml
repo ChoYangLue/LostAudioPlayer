@@ -44,5 +44,12 @@
           Minimum="0"
           Maximum="100" Margin="10,312,0,10" ValueChanged="VolumeSlider_ValueChanged" />
 
+        <Slider x:Name="SeekSlider"
+          TickFrequency="5"
+          Orientation="Horizontal"
+          Minimum="1"
+          Maximum="100"
+          Value="0" Margin="159,380,10,0" />
+
     </Grid>
 </Window>
