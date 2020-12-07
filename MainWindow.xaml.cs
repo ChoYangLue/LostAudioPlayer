@@ -13,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.IO;
 
 using NAudio.Wave;
 
@@ -33,6 +35,24 @@ namespace LostAudioPlayer
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        public List<string> SearchAudioFile(string path)
+        {
+            var audio_files = new List<string>();
+            string[] names = Directory.GetFiles(path, "*");
+            foreach (string name in names)
+            {
+                if (System.IO.Path.GetExtension(name) == ".wav" ||
+                    System.IO.Path.GetExtension(name) == ".flac" ||
+                    System.IO.Path.GetExtension(name) == ".mp3" ||
+                    System.IO.Path.GetExtension(name) == ".m4a")
+                {
+                    Console.WriteLine(name);
+                    audio_files.Add(name);
+                }
+            }
+            return audio_files;
         }
 
         public void play()
@@ -82,8 +102,10 @@ namespace LostAudioPlayer
         /* 設定のロードとセーブ関連 */
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            string root_folder = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+
             // 再生するファイル名
-            string fileName = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\ソードアート・オンライン_アリシゼーション_OP2.wav";
+            string fileName = root_folder + @"\ソードアート・オンライン_アリシゼーション_OP2.wav";
 
             // ファイル名の拡張子によって、異なるストリームを生成
             audioStream = new AudioFileReader(fileName);
@@ -96,6 +118,15 @@ namespace LostAudioPlayer
 
             // 音楽ストリームの入力
             outputDevice.Init(audioStream);
+
+            var audio_files = SearchAudioFile(root_folder);
+
+            ObservableCollection<AudioList> AudioLists = new ObservableCollection<AudioList>();
+            AudioLists.Add(new AudioList() { Name = "Yamada", Length = 50, Artist = "Tokyo", Album = "NNN" });
+            AudioLists.Add(new AudioList() { Name = "Suzuki", Length = 30, Artist = "Nagoya", Album = "NNN" });
+            AudioLists.Add(new AudioList() { Name = "Sato", Length = 40, Artist = "Osaka", Album = "NNN" });
+
+            AudioListView.ItemsSource = AudioLists;
 
             ts = Task.Run(() => {
                 SeekMethod();

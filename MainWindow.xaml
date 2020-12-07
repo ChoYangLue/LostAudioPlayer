@@ -50,6 +50,16 @@
           Minimum="1"
           Maximum="100"
           Value="0" Margin="159,380,10,0" />
+        <ListView x:Name="AudioListView" Margin="159,10,10,70">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn  DisplayMemberBinding="{Binding Name}" Header="name"/>
+                    <GridViewColumn  DisplayMemberBinding="{Binding Length}" Header="length"/>
+                    <GridViewColumn  DisplayMemberBinding="{Binding Artist}" Header="artist"/>
+                    <GridViewColumn  DisplayMemberBinding="{Binding Album}" Header="album"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
 
     </Grid>
 </Window>
