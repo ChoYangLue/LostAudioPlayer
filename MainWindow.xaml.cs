@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.IO;
+using Shell32;
 
 using NAudio.Wave;
 
@@ -53,6 +54,21 @@ namespace LostAudioPlayer
                 }
             }
             return audio_files;
+        }
+
+        public string GetTagInfoByAudioFile(string file_path, string tag_name)
+        {
+            Shell shell = new Shell();
+            Folder f = shell.NameSpace(System.IO.Path.GetDirectoryName(file_path));
+            FolderItem item = f.ParseName(System.IO.Path.GetFileName(file_path));
+
+            for (int i = 0; i < 30; i++)
+            {
+                Console.WriteLine(i.ToString() + "\t" + f.GetDetailsOf(null, i) + "\t" + f.GetDetailsOf(item, i));
+                if (f.GetDetailsOf(null, i) == tag_name) return f.GetDetailsOf(item, i);
+            }
+
+            return "";
         }
 
         public void play()
@@ -122,9 +138,15 @@ namespace LostAudioPlayer
             var audio_files = SearchAudioFile(root_folder);
 
             ObservableCollection<AudioList> AudioLists = new ObservableCollection<AudioList>();
-            AudioLists.Add(new AudioList() { Name = "Yamada", Length = 50, Artist = "Tokyo", Album = "NNN" });
-            AudioLists.Add(new AudioList() { Name = "Suzuki", Length = 30, Artist = "Nagoya", Album = "NNN" });
-            AudioLists.Add(new AudioList() { Name = "Sato", Length = 40, Artist = "Osaka", Album = "NNN" });
+            foreach (string file in audio_files)
+            {
+                AudioLists.Add(new AudioList() { 
+                    Name = GetTagInfoByAudioFile(file, "名前"), 
+                    Length = GetTagInfoByAudioFile(file, "長さ"), 
+                    Artist = GetTagInfoByAudioFile(file, "参加アーティスト"), 
+                    Album = GetTagInfoByAudioFile(file, "アルバム") 
+                });
+            }
 
             AudioListView.ItemsSource = AudioLists;
 
