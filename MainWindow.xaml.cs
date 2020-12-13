@@ -18,6 +18,7 @@ using System.IO;
 using Shell32;
 
 using NAudio.Wave;
+using System.Windows.Threading;
 
 namespace LostAudioPlayer
 {
@@ -32,6 +33,10 @@ namespace LostAudioPlayer
         IWavePlayer outputDevice;
         private bool SeekTaskFlag = true;
         Task ts;
+        private DispatcherTimer _timer = new DispatcherTimer();
+        private const int _timerInterval = 1;
+        private int _elapsedSec = 0;
+        private bool _sliderValueChangedByProgram = false;
 
         public MainWindow()
         {
@@ -79,10 +84,14 @@ namespace LostAudioPlayer
             {
                 // 音楽の再生 (おそらく非同期処理)
                 outputDevice.Play();
+
+                _timer.Start();
             }
             else
             {
                 outputDevice.Pause();
+
+                _timer.Stop();
             }
         }
 
@@ -97,6 +106,18 @@ namespace LostAudioPlayer
                 }));
                 Thread.Sleep(500);
             }
+        }
+
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            // 動画経過時間に合わせてスライダーを動かす
+            _elapsedSec += _timerInterval;
+            double totalSec = audioStream.TotalTime.TotalSeconds;
+            SeekSlider.Value = _elapsedSec / totalSec * SeekSlider.Maximum;
+
+            //double currentSec1 = audioStream.CurrentTime.TotalSeconds;
+            //SeekSlider.Value = (currentSec1 / audioStream.TotalTime.TotalSeconds) * SeekSlider.Maximum;
+            _sliderValueChangedByProgram = true;
         }
 
         private void BoolSwitcher(ref bool switch_button)
@@ -150,9 +171,14 @@ namespace LostAudioPlayer
 
             AudioListView.ItemsSource = AudioLists;
 
+            /*
             ts = Task.Run(() => {
                 SeekMethod();
             });
+            */
+
+            _timer.Interval = new TimeSpan(0, 0, _timerInterval);
+            _timer.Tick += dispatcherTimer_Tick;
 
             Volume = Properties.Settings.Default.volume_setting;
 
@@ -174,6 +200,21 @@ namespace LostAudioPlayer
             outputDevice.Volume = Volume;
 
             Console.WriteLine("Volume Change: "+Volume.ToString());
+        }
+
+        private void SeekSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!_sliderValueChangedByProgram && audioStream != null)
+            {
+                // スライダーを動かした位置に合わせて動画の再生箇所を更新する
+                double totalSec = audioStream.TotalTime.TotalSeconds;
+                double sliderValue = SeekSlider.Value;
+                double targetSec = (sliderValue * totalSec) / SeekSlider.Maximum;
+                _elapsedSec = (int) targetSec;
+                audioStream.CurrentTime = TimeSpan.FromSeconds(targetSec);
+                Console.WriteLine(targetSec);
+            }
+            _sliderValueChangedByProgram = false;
         }
     }
 }
