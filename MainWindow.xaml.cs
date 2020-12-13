@@ -75,6 +75,12 @@ namespace LostAudioPlayer
             return "";
         }
 
+        public string GetRootAudioDirectory()
+        {
+            string root_folder = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+            return root_folder;
+        }
+
         public void play()
         {
             outputDevice.Volume = Volume;
@@ -123,23 +129,15 @@ namespace LostAudioPlayer
             switch_button = true;
         }
 
-        private void PlayButton_Click(object sender, RoutedEventArgs e)
+        private void LoadAudioFile(string audio_file_path)
         {
-            if (audioStream == null) return;
-            BoolSwitcher(ref IsPlaying);
-            play();
-        }
-
-        /* 設定のロードとセーブ関連 */
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            string root_folder = System.Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-
-            // 再生するファイル名
-            string fileName = root_folder + @"\ソードアート・オンライン_アリシゼーション_OP2.wav";
+            if (!File.Exists(audio_file_path))
+            {
+                return;
+            }
 
             // ファイル名の拡張子によって、異なるストリームを生成
-            audioStream = new AudioFileReader(fileName);
+            audioStream = new AudioFileReader(audio_file_path);
 
             // コンストラクタを呼んだ際に、Positionが最後尾に移動したため、0に戻す
             audioStream.Position = 0;
@@ -149,8 +147,12 @@ namespace LostAudioPlayer
 
             // 音楽ストリームの入力
             outputDevice.Init(audioStream);
+        }
 
-            var audio_files = SearchAudioFile(root_folder);
+        /* 設定のロードとセーブ関連 */
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var audio_files = SearchAudioFile( GetRootAudioDirectory() );
 
             ObservableCollection<AudioList> AudioLists = new ObservableCollection<AudioList>();
             foreach (string file in audio_files)
@@ -164,6 +166,10 @@ namespace LostAudioPlayer
             }
 
             AudioListView.ItemsSource = AudioLists;
+
+            // 再生するファイル名
+            
+            if (audio_files.Count() > 0) LoadAudioFile(audio_files[0]);
 
             /*
             ts = Task.Run(() => {
@@ -188,6 +194,13 @@ namespace LostAudioPlayer
         }
 
         /* ボタンとスライダー関連 */
+        private void PlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (audioStream == null) return;
+            BoolSwitcher(ref IsPlaying);
+            play();
+        }
+
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Volume = (float) (e.NewValue /100 );
@@ -208,6 +221,21 @@ namespace LostAudioPlayer
                 Console.WriteLine("skip: "+targetSec.ToString());
             }
             IsSeekbarChangeByProgram = false;
+        }
+
+        private void AudioListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (AudioListView.SelectedItem == null) return; // ListViewで何も選択されていない場合は何もしない
+
+            AudioList item = (AudioList)AudioListView.SelectedItem; // ListViewで選択されている項目を取り出す
+            string Text = GetRootAudioDirectory() + @"\" +item.Name;
+            Console.WriteLine(Text);
+
+            outputDevice.Stop();
+            SeekbarTimer.Stop();
+
+            LoadAudioFile(Text);
+            SeekSlider.Value = 0;
         }
     }
 }

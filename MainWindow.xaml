@@ -18,7 +18,7 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
-        
+
         <Button
             Style="{StaticResource MaterialDesignFloatingActionButton}"
             ToolTip="MaterialDesignFloatingActionButton" Click="PlayButton_Click" Cursor="Hand" HorizontalAlignment="Left" Margin="54,36,0,0" Width="56" Height="56" VerticalAlignment="Top" >
@@ -27,7 +27,7 @@
                 Height="24"
                 Width="24" />
         </Button>
-        
+
         <Button
             Style="{StaticResource MaterialDesignFloatingActionButton}"
             ToolTip="MaterialDesignFloatingActionButton" Click="PlayButton_Click" Cursor="Hand" HorizontalAlignment="Left" Margin="54,336,0,0" Width="56" Height="56" VerticalAlignment="Top" >
@@ -49,8 +49,8 @@
           Orientation="Horizontal"
           Minimum="1"
           Maximum="100"
-          Value="0" Margin="159,380,10,0" ValueChanged="SeekSlider_ValueChanged" IsMoveToPointEnabled="True" />
-        <ListView x:Name="AudioListView" Margin="159,10,10,78">
+          Value="0" Margin="159,380,10,10" ValueChanged="SeekSlider_ValueChanged" IsMoveToPointEnabled="True" />
+        <ListView x:Name="AudioListView" Margin="159,10,10,0" SelectionChanged="AudioListView_SelectionChanged" Height="346" VerticalAlignment="Top">
             <ListView.View>
                 <GridView>
                     <GridViewColumn  DisplayMemberBinding="{Binding Name}" Header="name"/>

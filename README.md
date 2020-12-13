@@ -6,7 +6,7 @@
 * WPF
 * .NET Core
 * NAudio
-* MaterualDesignThemes
+* MaterialDesignThemes
 * windows10
 
 # アクションアイテム
@@ -16,7 +16,7 @@
 - [ ] 連続再生
 - [x] 再生位置調整
 - [x] ファイル外部読み込み
-- [ ] 複数読み込み
+- [x] 複数読み込み
 - [ ] プレイリスト作成
 - [ ] ループ再生
 - [ ] ランダム再生
