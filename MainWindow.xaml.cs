@@ -33,10 +33,9 @@ namespace LostAudioPlayer
         IWavePlayer outputDevice;
         private bool SeekTaskFlag = true;
         Task ts;
-        private DispatcherTimer _timer = new DispatcherTimer();
-        private const int _timerInterval = 1;
-        private int _elapsedSec = 0;
-        private bool _sliderValueChangedByProgram = false;
+        private DispatcherTimer SeekbarTimer = new DispatcherTimer();
+        private const int SeekbarTimerIntervalMillisec = 200;
+        private bool IsSeekbarChangeByProgram = false;
 
         public MainWindow()
         {
@@ -84,14 +83,12 @@ namespace LostAudioPlayer
             {
                 // 音楽の再生 (おそらく非同期処理)
                 outputDevice.Play();
-
-                _timer.Start();
+                SeekbarTimer.Start();
             }
             else
             {
                 outputDevice.Pause();
-
-                _timer.Stop();
+                SeekbarTimer.Stop();
             }
         }
 
@@ -111,13 +108,9 @@ namespace LostAudioPlayer
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             // 動画経過時間に合わせてスライダーを動かす
-            _elapsedSec += _timerInterval;
-            double totalSec = audioStream.TotalTime.TotalSeconds;
-            SeekSlider.Value = _elapsedSec / totalSec * SeekSlider.Maximum;
-
-            //double currentSec1 = audioStream.CurrentTime.TotalSeconds;
-            //SeekSlider.Value = (currentSec1 / audioStream.TotalTime.TotalSeconds) * SeekSlider.Maximum;
-            _sliderValueChangedByProgram = true;
+            double currentSec1 = audioStream.CurrentTime.TotalSeconds;
+            SeekSlider.Value = (currentSec1 / audioStream.TotalTime.TotalSeconds) * SeekSlider.Maximum;
+            IsSeekbarChangeByProgram = true;
         }
 
         private void BoolSwitcher(ref bool switch_button)
@@ -132,6 +125,7 @@ namespace LostAudioPlayer
 
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
+            if (audioStream == null) return;
             BoolSwitcher(ref IsPlaying);
             play();
         }
@@ -177,8 +171,8 @@ namespace LostAudioPlayer
             });
             */
 
-            _timer.Interval = new TimeSpan(0, 0, _timerInterval);
-            _timer.Tick += dispatcherTimer_Tick;
+            SeekbarTimer.Interval = TimeSpan.FromMilliseconds(SeekbarTimerIntervalMillisec);
+            SeekbarTimer.Tick += new EventHandler(dispatcherTimer_Tick);
 
             Volume = Properties.Settings.Default.volume_setting;
 
@@ -204,17 +198,16 @@ namespace LostAudioPlayer
 
         private void SeekSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (!_sliderValueChangedByProgram && audioStream != null)
+            if (!IsSeekbarChangeByProgram && audioStream != null)
             {
                 // スライダーを動かした位置に合わせて動画の再生箇所を更新する
                 double totalSec = audioStream.TotalTime.TotalSeconds;
                 double sliderValue = SeekSlider.Value;
                 double targetSec = (sliderValue * totalSec) / SeekSlider.Maximum;
-                _elapsedSec = (int) targetSec;
                 audioStream.CurrentTime = TimeSpan.FromSeconds(targetSec);
-                Console.WriteLine(targetSec);
+                Console.WriteLine("skip: "+targetSec.ToString());
             }
-            _sliderValueChangedByProgram = false;
+            IsSeekbarChangeByProgram = false;
         }
     }
 }
