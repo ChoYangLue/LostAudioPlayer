@@ -68,7 +68,7 @@ namespace LostAudioPlayer
 
             for (int i = 0; i < 30; i++)
             {
-                Console.WriteLine(i.ToString() + "\t" + f.GetDetailsOf(null, i) + "\t" + f.GetDetailsOf(item, i));
+                //Console.WriteLine(i.ToString() + "\t" + f.GetDetailsOf(null, i) + "\t" + f.GetDetailsOf(item, i));
                 if (f.GetDetailsOf(null, i) == tag_name) return f.GetDetailsOf(item, i);
             }
 
@@ -117,6 +117,17 @@ namespace LostAudioPlayer
             double currentSec1 = audioStream.CurrentTime.TotalSeconds;
             SeekSlider.Value = (currentSec1 / audioStream.TotalTime.TotalSeconds) * SeekSlider.Maximum;
             IsSeekbarChangeByProgram = true;
+
+            if (outputDevice.PlaybackState == PlaybackState.Stopped)
+            {
+                // Loop
+                IsPlaying = false;
+                audioStream.Position = 0;
+                outputDevice.Play();
+                IsPlaying = true;
+
+                Console.WriteLine("おわた");
+            }
         }
 
         private void BoolSwitcher(ref bool switch_button)
